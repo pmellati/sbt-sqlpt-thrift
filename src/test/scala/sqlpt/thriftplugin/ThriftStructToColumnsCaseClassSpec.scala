@@ -33,6 +33,56 @@ class ThriftStructToColumnsCaseClassSpec extends Specification {
           |)
         """.stripMargin)
     }
+
+    "utilize the thriftFieldNameToCaseClassFieldName transformation" in {
+      val struct = parseStruct(
+        """
+          |struct Car {
+          |     1: required string car_id;
+          |     2: required string model;
+          |}
+        """.stripMargin)
+
+      def toCaseClassFieldName(thriftFieldName: String): String =
+        s"transformed_$thriftFieldName"
+
+      val toCaseClass = ThriftStructToColumnsCaseClass(
+        thriftFieldNameToCaseClassFieldName = toCaseClassFieldName,
+        identity)
+
+      toCaseClass(struct).get must beSameScalaCodeAs(
+        """
+          |case class Columns(
+          |  transformed_car_id: Column[Str] = "car_id",
+          |  transformed_model:  Column[Str] = "model"
+          |)
+        """.stripMargin)
+    }
+
+    "utilize the thriftFieldNameToTableFieldName transformation" in {
+      val struct = parseStruct(
+        """
+          |struct Car {
+          |     1: required string car_id;
+          |     2: required string model;
+          |}
+        """.stripMargin)
+
+      def toTableFieldName(thriftFieldName: String): String =
+        s"transformed_$thriftFieldName"
+
+      val toCaseClass = ThriftStructToColumnsCaseClass(
+        identity,
+        thriftFieldNameToTableFieldName = toTableFieldName)
+
+      toCaseClass(struct).get must beSameScalaCodeAs(
+        """
+          |case class Columns(
+          |  car_id: Column[Str] = "transformed_car_id",
+          |  model:  Column[Str] = "transformed_model"
+          |)
+        """.stripMargin)
+    }
   }
 
   private def parseStruct(s: String): thrift.Struct =
