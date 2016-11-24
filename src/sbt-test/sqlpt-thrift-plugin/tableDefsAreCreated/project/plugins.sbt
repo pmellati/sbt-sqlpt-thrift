@@ -1,0 +1,1 @@
+addSbtPlugin("sqlpt" % "sqlpt-thrift-plugin" % "0.1-SNAPSHOT")
