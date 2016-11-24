@@ -83,6 +83,31 @@ class ThriftStructToColumnsCaseClassSpec extends Specification {
           |)
         """.stripMargin)
     }
+
+    "fail if the thrift struct contains a field with an unsupported type" in {
+      val structWithBadType = parseStruct(
+        s"""
+          |struct Car {
+          |     1: required string car_id;
+          |     2: required InvalidTypeName model;
+          |}
+        """.stripMargin)
+
+      val structWithValidTypes = parseStruct(
+        s"""
+           |struct Car {
+           |     1: required string car_id;
+           |     2: required byte model;
+           |}
+        """.stripMargin)
+
+      val toCaseClass = ThriftStructToColumnsCaseClass(identity, identity)
+
+      toCaseClass(structWithBadType) must
+        beFailedTry[Tree].withThrowable[RuntimeException](".* is not supported as a SQLpt column type.*")
+
+      toCaseClass(structWithValidTypes) must beSuccessfulTry
+    }
   }
 
   private def parseStruct(s: String): thrift.Struct =

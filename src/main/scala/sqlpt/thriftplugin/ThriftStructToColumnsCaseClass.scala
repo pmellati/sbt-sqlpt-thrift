@@ -3,6 +3,7 @@ package sqlpt.thriftplugin
 import com.twitter.scrooge.{ast => thrift}
 import treehugger.forest._, definitions._, treehuggerDSL._
 import scala.util.{Try, Failure, Success}
+import ThriftStructToColumnsCaseClass._
 
 case class ThriftStructToColumnsCaseClass(
   thriftFieldNameToCaseClassFieldName: String => String,
@@ -11,7 +12,7 @@ case class ThriftStructToColumnsCaseClass(
 
   def apply(thrStruct: thrift.Struct): Try[ClassDef] = {
     val caseClassParams = thrStruct.fields.map {field =>
-      getColumnType(field.fieldType, field.requiredness) map {colType =>
+      thriftFieldToColumnType(field.fieldType, field.requiredness) map {colType =>
         PARAM(
           thriftFieldNameToCaseClassFieldName(field.originalName),
           colType
@@ -25,7 +26,20 @@ case class ThriftStructToColumnsCaseClass(
     } yield CASECLASSDEF("Columns") withParams caseClassParamss
   }
 
-  private def getColumnType(fieldType: thrift.FieldType, requiredness: thrift.Requiredness): Try[Type] = {
+  private implicit class SequenceForTries[A](tries: Seq[Try[A]]) {
+    def sequence: Try[List[A]] =
+      tries.foldRight[Try[List[A]]](Success(Nil)) {(t, seq) =>
+        for {
+          t   <- t
+          seq <- seq
+        } yield t :: seq
+      }
+  }
+}
+
+object ThriftStructToColumnsCaseClass {
+  protected[thriftplugin]
+  def thriftFieldToColumnType(fieldType: thrift.FieldType, requiredness: thrift.Requiredness): Try[Type] = {
     import thrift._
 
     (fieldType match {
@@ -48,15 +62,5 @@ case class ThriftStructToColumnsCaseClass(
 
       TYPE_REF("Column") TYPE_OF typeWithNullability
     }
-  }
-
-  private implicit class SequenceForTries[A](tries: Seq[Try[A]]) {
-    def sequence: Try[List[A]] =
-      tries.foldRight[Try[List[A]]](Success(Nil)) {(t, seq) =>
-        for {
-          t   <- t
-          seq <- seq
-        } yield t :: seq
-      }
   }
 }
