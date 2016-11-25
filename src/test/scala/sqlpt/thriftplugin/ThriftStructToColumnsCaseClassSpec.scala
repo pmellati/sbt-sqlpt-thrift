@@ -1,14 +1,11 @@
 package sqlpt.thriftplugin
 
-import com.twitter.scrooge.frontend.{NullImporter, ThriftParser}
 import org.specs2.mutable.Specification
-import org.specs2.matcher.Matcher
-import treehugger.forest._, definitions._, treehuggerDSL._
-import scala.util.parsing.input.{Reader, CharArrayReader}
+import treehugger.forest._
 import com.twitter.scrooge.{ast => thrift}
-import java.util.StringTokenizer
+import testhelpers.Helpers
 
-class ThriftStructToColumnsCaseClassSpec extends Specification {
+class ThriftStructToColumnsCaseClassSpec extends Specification with Helpers {
   "ThriftStructToColumnsCaseClass" should {
     "successfully translate a thrift struct into a case class" in {
       val toCaseClass = ThriftStructToColumnsCaseClass(identity, identity)
@@ -111,32 +108,5 @@ class ThriftStructToColumnsCaseClassSpec extends Specification {
   }
 
   private def parseStruct(s: String): thrift.Struct =
-    thriftParser.struct(stringToReader(s)).get
-
-  private def stringToReader(str: String): Reader[Char] =
-    new CharArrayReader(str.toCharArray)
-
-  private val thriftParser = new ThriftParser(NullImporter, true)
-
-  private def beSameScalaCodeAs(codeStr: String): Matcher[Tree] = {
-    def tokenized(sourceCode: String): List[String] = {
-      val Delimiters = " \n()[]{},;:"
-
-      def toList(t: StringTokenizer): List[String] =
-        if(t.hasMoreTokens)
-          t.nextToken :: toList(t)
-        else
-          Nil
-
-      toList(new StringTokenizer(sourceCode, Delimiters, true)).filterNot(_.trim.isEmpty)
-    }
-
-    (
-      (tree: Tree) =>
-        tokenized(codeStr) == tokenized(treeToString(tree)),
-
-      (tree: Tree) =>
-        s"${treeToString(tree)}\n\nis not the same scala code as:\n$codeStr"
-    )
-  }
+    thriftParser.struct(toReader(s)).get
 }

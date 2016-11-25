@@ -2,15 +2,12 @@ package sqlpt.thriftplugin
 
 import org.specs2.mutable.Specification
 import com.twitter.scrooge.{ast => thrift}, thrift.Requiredness
-import com.twitter.scrooge.frontend.{NullImporter, ThriftParser}
-import treehugger.forest._, definitions._, treehuggerDSL._
-
-import scala.util.parsing.input.{CharArrayReader, Reader}
+import treehugger.forest._
 import scala.util.{Try, Success}
-
+import testhelpers.Helpers
 import ThriftStructToColumnsCaseClass.thriftFieldToColumnType
 
-class ThriftFieldToColumnTypeSpec extends Specification  {
+class ThriftFieldToColumnTypeSpec extends Specification with Helpers {
   "ThriftStructToColumnsCaseClass.thriftFieldToColumnType(fieldType, requiredness)" should {
     "successfully translate supported thrift types into the expected SQLpt column types" in {
       Seq(
@@ -55,11 +52,6 @@ class ThriftFieldToColumnTypeSpec extends Specification  {
       requiredness
     ).map(treeToString(_))
 
-  private val thriftParser = new ThriftParser(NullImporter, true)
-
   private def parseThriftFieldType(s: String): thrift.FieldType =
-    thriftParser.fieldType(stringToReader(s)).get
-
-  private def stringToReader(str: String): Reader[Char] =
-    new CharArrayReader(str.toCharArray)
+    thriftParser.fieldType(toReader(s)).get
 }
