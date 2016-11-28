@@ -1,4 +1,4 @@
-#@namespace scala blah.blah.blah
+#@namespace scala myorg.cars
 
 //
 // Random comments here ....

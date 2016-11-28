@@ -1,2 +1,4 @@
 > compile
-$ exists target/scala-2.11/src_managed/main/thrift/sqlpt/theTableDef.scala
+$ exists target/scala-2.11/src_managed/main/thrift/sqlpt/cars.scala
+$ exists target/scala-2.11/src_managed/main/thrift/sqlpt/icecreams.scala
+> testGeneratedFileContents

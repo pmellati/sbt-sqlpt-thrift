@@ -8,7 +8,7 @@ import ThriftStructToColumnsCaseClass._
 
 case class ThriftStructToColumnsCaseClass(
   thriftFieldNameToCaseClassFieldName: String => String,
-  thriftFieldNameToTableFieldName:     String => String
+  thriftFieldNameToTableColumnName:    String => String
 ) extends (thrift.Struct => Try[ClassDef]) {
 
   def apply(thrStruct: thrift.Struct): Try[ClassDef] = {
@@ -17,7 +17,7 @@ case class ThriftStructToColumnsCaseClass(
         PARAM(
           thriftFieldNameToCaseClassFieldName(field.originalName),
           colType
-        ) := LIT(thriftFieldNameToTableFieldName(field.originalName))
+        ) := LIT(thriftFieldNameToTableColumnName(field.originalName))
           : ValDef
       }
     }.sequence

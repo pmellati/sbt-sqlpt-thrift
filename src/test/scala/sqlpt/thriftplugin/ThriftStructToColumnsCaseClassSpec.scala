@@ -65,12 +65,12 @@ class ThriftStructToColumnsCaseClassSpec extends Specification with Helpers {
           |}
         """.stripMargin)
 
-      def toTableFieldName(thriftFieldName: String): String =
+      def toTableColumnName(thriftFieldName: String): String =
         s"transformed_$thriftFieldName"
 
       val toCaseClass = ThriftStructToColumnsCaseClass(
         identity,
-        thriftFieldNameToTableFieldName = toTableFieldName)
+        thriftFieldNameToTableColumnName = toTableColumnName)
 
       toCaseClass(struct).get must beSameScalaCodeAs(
         """

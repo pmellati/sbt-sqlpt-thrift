@@ -1,5 +1,8 @@
 package sqlpt.thriftplugin
 
+import com.twitter.scrooge.frontend.{NullImporter, ThriftParser}
+
+import scala.util.parsing.input.{CharArrayReader, Reader}
 import scala.util.{Success, Try}
 
 object Utils {
@@ -11,5 +14,12 @@ object Utils {
           seq <- seq
         } yield t :: seq
       }
+  }
+
+  trait BasicThriftParser {
+    def toReader(str: String): Reader[Char] =
+      new CharArrayReader(str.toCharArray)
+
+    val thriftParser = new ThriftParser(NullImporter, true)
   }
 }

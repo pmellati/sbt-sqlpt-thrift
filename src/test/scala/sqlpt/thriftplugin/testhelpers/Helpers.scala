@@ -1,18 +1,10 @@
 package sqlpt.thriftplugin.testhelpers
 
 import java.util.StringTokenizer
-import com.twitter.scrooge.frontend.{NullImporter, ThriftParser}
 import org.specs2.matcher.Matcher
 import org.specs2.matcher.Matchers._
+import sqlpt.thriftplugin.Utils.BasicThriftParser
 import treehugger.forest._
-import scala.util.parsing.input.{CharArrayReader, Reader}
-
-trait TestingThriftParser {
-  def toReader(str: String): Reader[Char] =
-    new CharArrayReader(str.toCharArray)
-
-  val thriftParser = new ThriftParser(NullImporter, true)
-}
 
 trait CodeTreeMatchers {
   def beSameScalaCodeAs(codeStr: String): Matcher[Tree] = {
@@ -38,4 +30,4 @@ trait CodeTreeMatchers {
   }
 }
 
-trait Helpers extends TestingThriftParser with CodeTreeMatchers
+trait Helpers extends BasicThriftParser with CodeTreeMatchers
