@@ -28,35 +28,34 @@ class ThriftFileToCompilationUnitSpec extends Specification with Helpers {
       """.stripMargin)
 
       fileToCu(thriftDoc) must beSuccessfulTry.withValue {generatedCu: Tree =>
-        generatedCu must beSameScalaCodeAs(
-          """
-            |package myorg.mypackage
-            |
-            |import sqlpt.api._
-            |
-            |object Car extends TableDef {
-            |  override def name = "Car"
-            |
-            |  case class Columns(
-            |    car_id: Column[Str]           = "car_id",
-            |    model:  Column[Str]           = "model",
-            |    price:  Column[Nullable[Num]] = "price"
-            |  )
-            |
-            |  override def cols = Columns()
-            |}
-            |
-            |object CarManufacturer extends TableDef {
-            |  override def name = "CarManufacturer"
-            |
-            |  case class Columns(
-            |    name:        Column[Str]           = "name",
-            |    foundedDate: Column[Nullable[Num]] = "foundedDate"
-            |  )
-            |
-            |  override def cols = Columns()
-            |}
-          """.stripMargin)
+        generatedCu must beSameScalaCodeAs("""
+          |package myorg.mypackage
+          |
+          |import sqlpt.api._
+          |
+          |object Car extends TableDef {
+          |  override def name = "Car"
+          |
+          |  case class Columns(
+          |    car_id: Column[Str]           = "car_id",
+          |    model:  Column[Str]           = "model",
+          |    price:  Column[Nullable[Num]] = "price"
+          |  )
+          |
+          |  override def cols = Columns()
+          |}
+          |
+          |object CarManufacturer extends TableDef {
+          |  override def name = "CarManufacturer"
+          |
+          |  case class Columns(
+          |    name:        Column[Str]           = "name",
+          |    foundedDate: Column[Nullable[Num]] = "foundedDate"
+          |  )
+          |
+          |  override def cols = Columns()
+          |}
+        """.stripMargin)
       }
     }
 
@@ -160,9 +159,59 @@ class ThriftFileToCompilationUnitSpec extends Specification with Helpers {
       """.stripMargin)
     }
 
-    "not fail if the thrift document is empty" in pending
+    "not fail if the thrift document is empty, or doesn't have structs" in {
+      Seq(
+        "",
+        """
+          |#@namespace scala myorg.mypackage
+          |
+        """.stripMargin,
+        """
+          |#@namespace scala myorg.mypackage
+          |
+          |union BoolOrInt {
+          |    1: bool myBool;
+          |    2: i32  myInt;
+          |}
+        """.stripMargin
+      ) map {technicallyEmptyDocStr =>
+        val technicallyEmptyDoc = parseThriftDoc(technicallyEmptyDocStr)
 
-    "not fail if there is no namespace declaration in the thrift document" in pending
+        fileToCu(technicallyEmptyDoc).get must
+          beSameScalaCodeAs("""
+            |import sqlpt.api._
+          """.stripMargin) or
+          beSameScalaCodeAs("""
+            |package myorg.mypackage
+            |
+            |import sqlpt.api._
+           """.stripMargin)
+      }
+    }
+
+    "not fail if there is no namespace declaration in the thrift document" in {
+      val thriftDoc = parseThriftDoc("""
+        |struct Car {
+        |     1: required string car_id;
+        |}
+      """.stripMargin)
+
+      fileToCu(thriftDoc) must beSuccessfulTry.withValue {generatedCu: Tree =>
+        generatedCu must beSameScalaCodeAs("""
+          |import sqlpt.api._
+          |
+          |object Car extends TableDef {
+          |  override def name = "Car"
+          |
+          |  case class Columns(
+          |    car_id: Column[Str] = "car_id"
+          |  )
+          |
+          |  override def cols = Columns()
+          |}
+        """.stripMargin)
+      }
+    }
   }
 
   private lazy val structToCc = ThriftStructToColumnsCaseClass(identity, identity)
