@@ -1,35 +1,31 @@
 package sqlpt.thriftplugin
 
 import org.specs2.mutable.Specification
-import treehugger.forest._
+import com.twitter.scrooge.{ast => thrift}
+import treehugger.forest.{PackageDef => CompilationUnit, _}
 import testhelpers.Helpers
 import ThriftFileToCompilationUnit.ObjectAndTableName
 
 class ThriftFileToCompilationUnitSpec extends Specification with Helpers {
   "ThriftFileToCompilationUnit" should {
     "translate a valid thrift file into a compilation unit" in {
-      val thriftDocStr =
-        """
-          |#@namespace scala myorg.mypackage
-          |
-          |// random comments
-          |
-          |struct Car {
-          |     1: required string car_id;           // Blah blah
-          |     2: required string model;
-          |     3: optional i32    price = 333;
-          |}
-          |
-          |struct CarManufacturer {
-          |  1: required string name;
-          |  2: optional i32    foundedDate;
-          |}
-          |
-        """.stripMargin
-
-      val thriftDoc = thriftParser.document(toReader(thriftDocStr)).get
-
-      val structToCc = ThriftStructToColumnsCaseClass(identity, identity)
+      val thriftDoc = parseThriftDoc("""
+        |#@namespace scala myorg.mypackage
+        |
+        |// random comments
+        |
+        |struct Car {
+        |     1: required string car_id;           // Blah blah
+        |     2: required string model;
+        |     3: optional i32    price = 333;
+        |}
+        |
+        |struct CarManufacturer {
+        |  1: required string name;
+        |  2: optional i32    foundedDate;
+        |}
+        |
+      """.stripMargin)
 
       val fileToCu = ThriftFileToCompilationUnit(structToCc, {case x => ObjectAndTableName(x, x)})
 
@@ -66,10 +62,32 @@ class ThriftFileToCompilationUnitSpec extends Specification with Helpers {
       }
     }
 
-    "fail if the thrift file contains invalid types" in pending
+    "fail if the thrift file contains invalid types" in {
+      val thriftDoc = parseThriftDoc("""
+        |#@namespace scala myorg.mypackage
+        |
+        |struct Car {
+        |     1: required string car_id;           // Blah blah
+        |     2: required InvalidType model;
+        |}
+        |
+      """.stripMargin)
+
+      val fileToCu = ThriftFileToCompilationUnit(structToCc, {case x => ObjectAndTableName(x, x)})
+
+      fileToCu(thriftDoc) must beFailedTry[CompilationUnit]
+        .withThrowable[RuntimeException]("Thrift type .* is not supported as a SQLpt column type.")
+    }
 
     "honor the structNameToObjectAndTableName parameter" in pending
 
-    "not fail if the thrift file is empty" in pending
+    "not fail if the thrift document is empty" in pending
+
+    "not fail if there is no namespace declaration in the thrift document" in pending
   }
+
+  private val structToCc = ThriftStructToColumnsCaseClass(identity, identity)
+
+  private def parseThriftDoc(str: String): thrift.Document =
+    thriftParser.document(toReader(str)).get
 }
