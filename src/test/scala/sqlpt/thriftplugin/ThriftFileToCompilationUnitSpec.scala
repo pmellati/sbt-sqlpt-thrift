@@ -4,7 +4,7 @@ import org.specs2.mutable.Specification
 import com.twitter.scrooge.{ast => thrift}
 import treehugger.forest.{PackageDef => CompilationUnit, _}
 import testhelpers.Helpers
-import ThriftFileToCompilationUnit.ObjectAndTableName
+import ThriftFileToCompilationUnit.TableInfo
 
 class ThriftFileToCompilationUnitSpec extends Specification with Helpers {
   "ThriftFileToCompilationUnit" should {
@@ -109,8 +109,8 @@ class ThriftFileToCompilationUnitSpec extends Specification with Helpers {
       """.stripMargin)
 
       val fileToCuWithNameTranslations = ThriftFileToCompilationUnit(structToCc, {
-        case "Car"             => ObjectAndTableName(objectName = "Cars", tableName = "cars")
-        case "CarManufacturer" => ObjectAndTableName(objectName = "CarManufacturers", tableName = "car_manu")
+        case "Car"             => TableInfo(objectName = "Cars", tableName = "cars")
+        case "CarManufacturer" => TableInfo(objectName = "CarManufacturers", tableName = "car_manu")
       })
 
       fileToCuWithNameTranslations(thriftDoc).get must beSameScalaCodeAs("""
@@ -134,7 +134,7 @@ class ThriftFileToCompilationUnitSpec extends Specification with Helpers {
       """.stripMargin)
 
       val fileToCuWithNameTranslationsAndAnOmission = ThriftFileToCompilationUnit(structToCc, {
-        case "Car" => ObjectAndTableName(objectName = "Cars", tableName = "cars")
+        case "Car" => TableInfo(objectName = "Cars", tableName = "cars")
       })
 
       fileToCuWithNameTranslationsAndAnOmission(thriftDoc).get must beSameScalaCodeAs("""
@@ -216,7 +216,7 @@ class ThriftFileToCompilationUnitSpec extends Specification with Helpers {
 
   private lazy val structToCc = ThriftStructToColumnsCaseClass(identity, identity)
 
-  private lazy val fileToCu = ThriftFileToCompilationUnit(structToCc, {case x => ObjectAndTableName(x, x)})
+  private lazy val fileToCu = ThriftFileToCompilationUnit(structToCc, {case x => TableInfo(x, x)})
 
   private def parseThriftDoc(str: String): thrift.Document =
     thriftParser.document(toReader(str)).get

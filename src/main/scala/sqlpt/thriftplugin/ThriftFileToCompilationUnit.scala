@@ -7,13 +7,13 @@ import Utils.SequenceForTries
 import ThriftFileToCompilationUnit._
 
 case class ThriftFileToCompilationUnit(
-  structToCaseClass:              ThriftStructToColumnsCaseClass,
-  structNameToObjectAndTableName: PartialFunction[StructName, ObjectAndTableName]
+  structToCaseClass:     ThriftStructToColumnsCaseClass,
+  structNameToTableInfo: PartialFunction[StructName, TableInfo]
 ) extends (thrift.Document => Try[CompilationUnit]) {
   def apply(doc: thrift.Document): Try[CompilationUnit] = {
     val tableDefs = doc.defs.collect {
-      case struct: thrift.Struct if structNameToObjectAndTableName.isDefinedAt(struct.originalName) =>
-        val names = structNameToObjectAndTableName(struct.originalName)
+      case struct: thrift.Struct if structNameToTableInfo.isDefinedAt(struct.originalName) =>
+        val names = structNameToTableInfo(struct.originalName)
         thriftStructToTableDef(structToCaseClass)(struct, names.objectName, names.tableName)
     }.sequence
 
@@ -49,5 +49,5 @@ object ThriftFileToCompilationUnit {
 
   type StructName = String
 
-  case class ObjectAndTableName(objectName: String, tableName: String)
+  case class TableInfo(objectName: String, tableName: String)
 }
