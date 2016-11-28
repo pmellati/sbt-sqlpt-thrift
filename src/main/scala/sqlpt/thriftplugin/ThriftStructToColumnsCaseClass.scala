@@ -3,6 +3,7 @@ package sqlpt.thriftplugin
 import com.twitter.scrooge.{ast => thrift}
 import treehugger.forest._, definitions._, treehuggerDSL._
 import scala.util.{Try, Failure, Success}
+import Utils.SequenceForTries
 import ThriftStructToColumnsCaseClass._
 
 case class ThriftStructToColumnsCaseClass(
@@ -24,16 +25,6 @@ case class ThriftStructToColumnsCaseClass(
     for {
       caseClassParamss <- caseClassParams
     } yield CASECLASSDEF("Columns") withParams caseClassParamss
-  }
-
-  private implicit class SequenceForTries[A](tries: Seq[Try[A]]) {
-    def sequence: Try[List[A]] =
-      tries.foldRight[Try[List[A]]](Success(Nil)) {(t, seq) =>
-        for {
-          t   <- t
-          seq <- seq
-        } yield t :: seq
-      }
   }
 }
 

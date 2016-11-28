@@ -4,7 +4,7 @@ import org.specs2.mutable.Specification
 import treehugger.forest._, definitions._, treehuggerDSL._
 import com.twitter.scrooge.{ast => thrift}
 import testhelpers.Helpers
-import ThriftFileToTableDefs.thriftStructToTableDef
+import ThriftFileToCompilationUnit.thriftStructToTableDef
 
 class ThriftStructToTableDefSpec extends Specification with Helpers {
   "ThriftFileToTableDefs.thriftStructToTableDef(...)" should {
