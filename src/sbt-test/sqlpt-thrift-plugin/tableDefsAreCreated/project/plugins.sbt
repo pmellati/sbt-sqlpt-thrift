@@ -1,1 +1,1 @@
-addSbtPlugin("sqlpt" % "sbt-sqlpt-thrift" % "0.1-SNAPSHOT")
+addSbtPlugin("sqlpt" % "sbt-sqlpt-thrift" % "0.2-SNAPSHOT")
